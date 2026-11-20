@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Control Panel - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar" style="border-right: 1px solid rgba(0,0,0,0.1); background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(240,240,240,0.9));">
+        <a href="/admin" class="sidebar-logo">
+            <i class='bx bx-shield-quarter' style="color: var(--text-primary);"></i> AgriTwin<span>X</span>
+        </a>
+        <p style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin: 0 0 1rem 2rem;">Admin Panel</p>
+        <nav class="sidebar-nav">
+            <a href="/admin" class="nav-item active">
+                <i class='bx bx-bar-chart-square'></i> Platform Overview
+            </a>
+            <a href="/logout" class="nav-item" style="margin-top: auto; color: var(--danger);">
+                <i class='bx bx-log-out'></i> Logout Admin
+            </a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div class="welcome-text">
+                <h1>System Admin Dashboard</h1>
+                <p>Monitor platform usage, update global variables, and retrain AI models.</p>
+            </div>
+            <div class="topbar-actions">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--text-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                    <i class='bx bx-shield'></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+            <div class="glass-card summary-card" style="text-align: center; padding: 2rem;">
+                <i class='bx bx-group' style="font-size: 2.5rem; color: var(--info); margin-bottom: 1rem;"></i>
+                <h3 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ total_users }}</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Registered Farmers</p>
+            </div>
+            <div class="glass-card summary-card" style="text-align: center; padding: 2rem;">
+                <i class='bx bx-scan' style="font-size: 2.5rem; color: var(--agri-green); margin-bottom: 1rem;"></i>
+                <h3 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ total_analyses }}</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Total AI Analyses</p>
+            </div>
+            <div class="glass-card summary-card" style="text-align: center; padding: 2rem;">
+                <i class='bx bx-message-square-check' style="font-size: 2.5rem; color: var(--warning); margin-bottom: 1rem;"></i>
+                <h3 style="font-size: 2rem; margin-bottom: 0.5rem;">{{ feedbacks|length }}</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Harvest Feedbacks</p>
+            </div>
+        </div>
+
+        <div class="dashboard-grid complex" style="grid-template-columns: 2fr 1fr;">
+            
+            <!-- Model Performance & Retraining (Left) -->
+            <div class="glass-card card-full" style="padding: 2rem;">
+                <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class='bx bx-brain'></i> AI Model Performance (Production)
+                </h3>
+                <div style="display: flex; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <div style="flex: 1; border: 1px solid rgba(0,0,0,0.05); padding: 1.5rem; border-radius: var(--radius-md);">
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">EfficientNet-B3 (Disease)</p>
+                        <div style="display: flex; justify-content: space-between; align-items: end;">
+                            <span style="font-size: 1.8rem; font-weight: 700; color: var(--agri-green);">94.2%</span>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">Accuracy</span>
+                        </div>
+                    </div>
+                    <div style="flex: 1; border: 1px solid rgba(0,0,0,0.05); padding: 1.5rem; border-radius: var(--radius-md);">
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">YOLOv8 (Pest)</p>
+                        <div style="display: flex; justify-content: space-between; align-items: end;">
+                            <span style="font-size: 1.8rem; font-weight: 700; color: var(--agri-green);">89.7%</span>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">mAP@0.5</span>
+                        </div>
+                    </div>
+                    <div style="flex: 1; border: 1px solid rgba(0,0,0,0.05); padding: 1.5rem; border-radius: var(--radius-md);">
+                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">LightGBM (Yield)</p>
+                        <div style="display: flex; justify-content: space-between; align-items: end;">
+                            <span style="font-size: 1.8rem; font-weight: 700; color: var(--agri-green);">0.92</span>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">R² Score</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.02); padding: 1.5rem; border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h4 style="margin-bottom: 0.25rem;">Continuous Learning Pipeline</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Accumulated {{ feedbacks|length }} new labeled ground-truth samples from farmers.</p>
+                    </div>
+                    <button class="btn btn-retrain" onclick="triggerRetraining()" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <i class='bx bx-refresh'></i> Trigger Model Retraining
+                    </button>
+                </div>
+            </div>
+
+            <!-- Global Settings (Right) -->
+            <div class="glass-card card-full" style="padding: 2rem;">
+                <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class='bx bx-cog'></i> Global Variables
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Update real-time market metrics. This applies immediately to all LightGBM yield profit calculations across the platform.</p>
+                
+                <form action="/admin/update-price" method="POST">
+                    <div class="form-group">
+                        <label class="form-label">Crop Name</label>
+                        <input type="text" name="crop_name" class="form-control" value="Rice" readonly style="background: rgba(0,0,0,0.02);">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Market Price (₹ per ton)</label>
+                        {% set current_rice_price = 18500.0 %}
+                        {% for p in market_prices %}
+                            {% if p.crop_name == 'Rice' %}
+                                {% set current_rice_price = p.price_per_ton %}
+                            {% endif %}
+                        {% endfor %}
+                        <input type="number" name="price_per_ton" class="form-control" step="100" value="{{ current_rice_price }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Update Market Price</button>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- Farmer Feedback Table -->
+        <div class="glass-card" style="padding: 2rem; margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Recent Harvest Feedback (Ground Truth)</h3>
+            <div class="admin-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Farmer ID</th>
+                            <th>Actual Yield (t/ha)</th>
+                            <th>Disease Confirmed</th>
+                            <th>Treatment Used</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if not feedbacks %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No feedback data submitted yet.</td>
+                        </tr>
+                        {% else %}
+                            {% for f in feedbacks %}
+                            <tr>
+                                <td>{{ f.harvest_date.strftime('%Y-%m-%d') }}</td>
+                                <td>#{{ f.user_id }}</td>
+                                <td><strong>{{ f.actual_yield }}</strong></td>
+                                <td>{{ f.disease_confirmed or 'N/A' }}</td>
+                                <td>{{ f.treatment_used or 'None' }}</td>
+                                <td>
+                                    {% if f.was_helpful %}
+                                    <span class="badge-status success">Helpful</span>
+                                    {% else %}
+                                    <span class="badge-status danger">Needs Review</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal for Retraining -->
+<div class="loader-overlay" id="retrainLoader" style="background: rgba(0,0,0,0.85);">
+    <div class="spinner" style="border-color: white transparent white transparent;"></div>
+    <div class="loader-text" style="color: white;">Executing Active Learning Pipeline...</div>
+    <div class="loader-subtext" style="color: rgba(255,255,255,0.7);" id="retrainSubtext">Merging ground-truth feedback with training dataset...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function triggerRetraining() {
+        if(confirm("Are you sure you want to trigger the cloud retraining pipeline? This will consume GPU resources.")) {
+            const loader = document.getElementById('retrainLoader');
+            const subtext = document.getElementById('retrainSubtext');
+            loader.classList.add('active');
+            
+            const states = [
+                "Merging ground-truth feedback with training dataset...",
+                "Fine-tuning EfficientNet-B3 (Disease)...",
+                "Re-calibrating LightGBM Regressor (Yield)...",
+                "Deploying updated weights to production...",
+                "Pipeline Complete!"
+            ];
+            
+            let i = 0;
+            const interval = setInterval(() => {
+                i++;
+                if (i < states.length) {
+                    subtext.textContent = states[i];
+                } else {
+                    clearInterval(interval);
+                    loader.classList.remove('active');
+                    alert("Model retraining pipeline executed successfully (Simulation).");
+                }
+            }, 1500);
+        }
+    }
+</script>
+{% endblock %}

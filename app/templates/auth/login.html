@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Login - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="container auth-container">
+    <div class="glass-card auth-card">
+        <div class="auth-header">
+            <div class="auth-icon"><i class='bx bx-leaf'></i></div>
+            <h2>Welcome Back</h2>
+            <p>Login to your AgriTwinX dashboard</p>
+        </div>
+
+        <form action="/login" method="POST" id="loginForm">
+            <div class="form-group">
+                <label for="email" class="form-label"><i class='bx bx-envelope'></i> Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" required placeholder="ramesh.kumar@gmail.com" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label"><i class='bx bx-lock-alt'></i> Password</label>
+                <div class="input-with-icon">
+                    <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••" autocomplete="current-password">
+                    <button type="button" class="input-icon-btn" onclick="togglePassword('password', this)" aria-label="Show password">
+                        <i class='bx bx-show'></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-large" id="loginSubmitBtn">
+                <i class='bx bx-log-in-circle'></i> Login to Dashboard
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="/signup">Sign up as Farmer</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function togglePassword(fieldId, btn) {
+        const field = document.getElementById(fieldId);
+        const icon = btn.querySelector('i');
+        const isHidden = field.type === 'password';
+        field.type = isHidden ? 'text' : 'password';
+        icon.classList.toggle('bx-show', !isHidden);
+        icon.classList.toggle('bx-hide', isHidden);
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function () {
+        const btn = document.getElementById('loginSubmitBtn');
+        btn.disabled = true;
+        btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Logging in...";
+    });
+</script>
+{% endblock %}

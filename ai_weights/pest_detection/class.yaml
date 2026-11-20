@@ -1,0 +1,18 @@
+names:
+- brown-planthopper
+- green-leafhopper
+- leaf-folder
+- rice-bug
+- stem-borer
+- whorl-maggot
+nc: 6
+path: /kaggle/input/datasets/gurimakhija/ricedata
+roboflow:
+  license: CC BY 4.0
+  project: rice-pests-ztbeq
+  url: https://universe.roboflow.com/laktharu/rice-pests-ztbeq/dataset/1
+  version: 1
+  workspace: laktharu
+test: ../test/images
+train: ../train/images
+val: ../valid/images

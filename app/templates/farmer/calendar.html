@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Farming Calendar - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <a href="/dashboard" class="sidebar-logo">
+            <i class='bx bx-leaf'></i> AgriTwin<span>X</span>
+        </a>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item">
+                <i class='bx bx-grid-alt'></i> Dashboard
+            </a>
+            <a href="/analyse" class="nav-item">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+            <a href="/treatment-simulator" class="nav-item">
+                <i class='bx bx-flask'></i> Treatment Simulator
+            </a>
+            <a href="/weather-impact" class="nav-item">
+                <i class='bx bx-cloud-light-rain'></i> Weather Impact
+            </a>
+            <a href="/calendar" class="nav-item active">
+                <i class='bx bx-calendar-event'></i> Farming Calendar
+            </a>
+            <a href="/history" class="nav-item">
+                <i class='bx bx-history'></i> History
+            </a>
+            <a href="/settings" class="nav-item">
+                <i class='bx bx-cog'></i> Settings
+            </a>
+            <a href="/logout" class="nav-item" style="margin-top: auto; color: var(--danger);">
+                <i class='bx bx-log-out'></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="welcome-text">
+                    <h1>Farming Calendar</h1>
+                    <p><i class='bx bx-map-pin' style="vertical-align: -1px;"></i> {{ user.village }} — Farm Size: {{ user.farm_size }} acres</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <div class="notification-bell" title="Notifications">
+                    <i class='bx bxs-bell'></i>
+                </div>
+                <div class="avatar-circle">
+                    {{ user.name[0] | upper }}
+                </div>
+            </div>
+        </header>
+
+        {% if not calendar or not calendar.schedule_json %}
+        <div class="empty-state glass-card">
+            <i class='bx bx-calendar-event'></i>
+            <h3>No farming calendar yet</h3>
+            <p>Run your first field analysis so AgriTwinX can generate your personalized, week-wise farming plan.</p>
+            <a href="/analyse" class="btn btn-primary btn-large">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+        </div>
+        {% else %}
+
+        <div class="dashboard-grid">
+            <div class="glass-card summary-card card-full">
+                <div class="card-header bordered">
+                    <h3 class="card-title">LLaMA 3 Personalized Farming Plan</h3>
+                    <div class="card-icon"><i class='bx bx-calendar-check'></i></div>
+                </div>
+                <div class="card-content">
+                    {% if calendar.week_number %}
+                    <p class="stat-caption" style="margin-bottom: 1.25rem;">Current Week: <strong>{{ calendar.week_number }}</strong></p>
+                    {% endif %}
+
+                    {% for week, action in calendar.schedule_json.items() %}
+                    <div class="calendar-week">
+                        <h4>{{ week }}</h4>
+                        <p>{{ action }}</p>
+                    </div>
+                    {% endfor %}
+
+                    {% if calendar.groq_generated_at %}
+                    <p class="stat-caption" style="margin-top: 1.5rem; opacity: 0.7;">
+                        <i class='bx bx-time-five'></i> Generated on {{ calendar.groq_generated_at }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebarOverlay').classList.add('open');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+</script>
+{% endblock %}

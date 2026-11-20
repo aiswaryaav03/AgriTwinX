@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <a href="/dashboard" class="sidebar-logo">
+            <i class='bx bx-leaf'></i> AgriTwin<span>X</span>
+        </a>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item">
+                <i class='bx bx-grid-alt'></i> Dashboard
+            </a>
+            <a href="/analyse" class="nav-item">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+            <a href="/treatment-simulator" class="nav-item">
+                <i class='bx bx-flask'></i> Treatment Simulator
+            </a>
+            <a href="/weather-impact" class="nav-item">
+                <i class='bx bx-cloud-light-rain'></i> Weather Impact
+            </a>
+            <a href="/calendar" class="nav-item">
+                <i class='bx bx-calendar-event'></i> Farming Calendar
+            </a>
+            <a href="/history" class="nav-item">
+                <i class='bx bx-history'></i> History
+            </a>
+            <a href="/settings" class="nav-item active">
+                <i class='bx bx-cog'></i> Settings
+            </a>
+            <a href="/logout" class="nav-item" style="margin-top: auto; color: var(--danger);">
+                <i class='bx bx-log-out'></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="welcome-text">
+                    <h1>Settings</h1>
+                    <p><i class='bx bx-user' style="vertical-align: -1px;"></i> Manage your account details</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <div class="avatar-circle">
+                    {{ user.name[0] | upper }}
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+
+            <!-- Account Overview -->
+            <div class="glass-card summary-card card-half">
+                <div class="card-header bordered">
+                    <h3 class="card-title">Account Overview</h3>
+                    <div class="card-icon"><i class='bx bx-user-circle'></i></div>
+                </div>
+                <div class="card-content">
+                    <div class="stat-row" style="flex-direction: column; gap: 1.25rem;">
+                        <div class="stat-block">
+                            <p class="stat-label">Full Name</p>
+                            <p class="stat-value">{{ user.name if user.name else "Not available" }}</p>
+                        </div>
+                        <div class="stat-block">
+                            <p class="stat-label">Village / Location</p>
+                            <p class="stat-value">{{ user.village if user.village else "Not available" }}</p>
+                        </div>
+                        <div class="stat-block">
+                            <p class="stat-label">Farm Size</p>
+                            <p class="stat-value">{{ (user.farm_size ~ " acres") if user.farm_size else "Not available" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preferences placeholder (no backend logic wired yet) -->
+            <div class="glass-card summary-card card-half">
+                <div class="card-header bordered">
+                    <h3 class="card-title">More Settings</h3>
+                    <div class="card-icon"><i class='bx bx-cog'></i></div>
+                </div>
+                <div class="card-content">
+                    <div class="empty-state" style="padding: 2rem 1rem;">
+                        <i class='bx bx-lock-alt'></i>
+                        <h3>Coming Soon</h3>
+                        <p>Editable profile details, password changes, and notification preferences will appear here once available.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebarOverlay').classList.add('open');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+</script>
+{% endblock %}

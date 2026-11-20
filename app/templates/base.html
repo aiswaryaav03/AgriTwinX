@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgriTwinX{% endblock %}</title>
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Icons (Boxicons for clean, modern look) -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <!-- Chart.js for Explainable AI (SHAP) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Additional Head Elements -->
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Flash Messages Handler -->
+    <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.75rem;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast glass-card {% if category == 'error' %}toast-error{% elif category == 'warning' %}toast-warning{% else %}toast-success{% endif %}">
+                        <i class='bx {% if category == "error" %}bx-error-circle{% elif category == "warning" %}bx-error{% else %}bx-check-circle{% endif %}'></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Global Loading Overlay (use showLoader()/hideLoader() from any page) -->
+    <div class="loader-overlay" id="global-loader">
+        <div class="spinner"></div>
+        <div class="loader-text" id="global-loader-text">Processing...</div>
+        <div class="loader-subtext" id="global-loader-subtext">This may take a few seconds</div>
+    </div>
+
+    <!-- Main Content Injection -->
+    {% block content %}
+    {% endblock %}
+
+    <!-- Global JS Logic -->
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', () => {
+            const toasts = document.querySelectorAll('.toast');
+            toasts.forEach(toast => {
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100px)';
+                    toast.style.transition = 'all 0.5s ease';
+                    setTimeout(() => toast.remove(), 500);
+                }, 5000);
+            });
+        });
+
+        // Reusable global loader helpers — call from any page's inline scripts
+        function showLoader(text = 'Processing...', subtext = 'This may take a few seconds') {
+            const overlay = document.getElementById('global-loader');
+            document.getElementById('global-loader-text').textContent = text;
+            document.getElementById('global-loader-subtext').textContent = subtext;
+            overlay.classList.add('active');
+        }
+        function hideLoader() {
+            document.getElementById('global-loader').classList.remove('active');
+        }
+
+        // Reusable toast helper for JS-driven feedback (e.g. AJAX responses)
+        function showToast(message, category = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const cls = category === 'error' ? 'toast-error' : category === 'warning' ? 'toast-warning' : 'toast-success';
+            const icon = category === 'error' ? 'bx-error-circle' : category === 'warning' ? 'bx-error' : 'bx-check-circle';
+            toast.className = `toast glass-card ${cls}`;
+            toast.innerHTML = `<i class='bx ${icon}'></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100px)';
+                toast.style.transition = 'all 0.5s ease';
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
+        }
+    </script>
+
+    <!-- Page Specific JS -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}Analyse My Field - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <a href="/dashboard" class="sidebar-logo">
+            <i class='bx bx-leaf'></i> AgriTwin<span>X</span>
+        </a>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item">
+                <i class='bx bx-grid-alt'></i> Dashboard
+            </a>
+            <a href="/analyse" class="nav-item active">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+            <a href="/treatment-simulator" class="nav-item">
+                <i class='bx bx-flask'></i> Treatment Simulator
+            </a>
+            <a href="/weather-impact" class="nav-item">
+                <i class='bx bx-cloud-light-rain'></i> Weather Impact
+            </a>
+            <a href="/calendar" class="nav-item">
+                <i class='bx bx-calendar-event'></i> Farming Calendar
+            </a>
+            <a href="/history" class="nav-item">
+                <i class='bx bx-history'></i> History
+            </a>
+            <a href="/settings" class="nav-item">
+                <i class='bx bx-cog'></i> Settings
+            </a>
+            <a href="/logout" class="nav-item" style="margin-top: auto; color: var(--danger);">
+                <i class='bx bx-log-out'></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="welcome-text">
+                    <h1>Analyse My Field</h1>
+                    <p>Run your farm data through our 5 AI models simultaneously.</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <div class="avatar-circle">
+                    {{ user.name[0] | upper }}
+                </div>
+            </div>
+        </header>
+
+        <div class="analyse-form-container">
+            <div class="glass-card" style="padding: 2.5rem;">
+                <form id="analyseForm" enctype="multipart/form-data">
+
+                    <div class="form-section">
+                        <h3><i class='bx bx-image-add'></i> Leaf Image Upload (Mandatory)</h3>
+                        <div class="file-upload-zone" id="dropzone">
+                            <div id="uploadPrompt">
+                                <i class='bx bx-cloud-upload'></i>
+                                <p><strong>Click to upload</strong> or drag and drop leaf image here</p>
+                                <p style="font-size: 0.8rem; opacity: 0.7;">PNG, JPG up to 10MB</p>
+                            </div>
+                            <div class="upload-preview-wrap" id="previewWrap" style="display: none;">
+                                <img id="imagePreview" class="image-preview" src="" alt="Image Preview" style="display: block;">
+                            </div>
+                            <input type="file" name="image" id="imageInput" accept="image/png, image/jpeg, image/jpg" required>
+                        </div>
+                        <button type="button" class="upload-remove-btn" id="removeImageBtn" style="display: none; position: static; margin-top: 0.75rem; width: auto; height: auto; border-radius: var(--radius-sm); padding: 0.4rem 0.9rem; gap: 0.4rem; font-size: 0.8rem; border: none;">
+                            <i class='bx bx-trash'></i> Remove image
+                        </button>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><i class='bx bx-spa'></i> Crop Details</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="variety" class="form-label">Paddy Variety</label>
+                                <select name="variety" id="variety" class="form-control" required>
+                                    <option value="IR-64" selected>IR-64</option>
+                                    <option value="ADT-45">ADT-45</option>
+                                    <option value="BPT-5204">BPT-5204</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="crop_age" class="form-label">Crop Age (in days)</label>
+                                <input type="number" name="crop_age" id="crop_age" class="form-control" value="45" min="1" max="150" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="growth_stage" class="form-label">Growth Stage</label>
+                                <select name="growth_stage" id="growth_stage" class="form-control" required>
+                                    <option value="Seedling">Seedling (0-20 days)</option>
+                                    <option value="Tillering" selected>Tillering (21-50 days)</option>
+                                    <option value="Panicle Initiation">Panicle Initiation (51-70 days)</option>
+                                    <option value="Flowering">Flowering (71-90 days)</option>
+                                    <option value="Maturity">Maturity (>90 days)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-header">
+                            <h3><i class='bx bx-water'></i> Soil Health</h3>
+                            <button type="button" id="btnRegionalAvg" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                <i class='bx bx-target-lock'></i> Use Regional Average
+                            </button>
+                        </div>
+                        <p class="form-section-hint">Enter your recent soil test results, or click the button above to auto-fill Thanjavur averages.</p>
+                        <div class="form-row" style="grid-template-columns: repeat(4, 1fr);">
+                            <div class="form-group">
+                                <label for="soil_N" class="form-label">Nitrogen (N)</label>
+                                <input type="number" name="soil_N" id="soil_N" class="form-control" step="0.1" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="soil_P" class="form-label">Phosphorus (P)</label>
+                                <input type="number" name="soil_P" id="soil_P" class="form-control" step="0.1" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="soil_K" class="form-label">Potassium (K)</label>
+                                <input type="number" name="soil_K" id="soil_K" class="form-control" step="0.1" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="soil_pH" class="form-label">Soil pH</label>
+                                <input type="number" name="soil_pH" id="soil_pH" class="form-control" step="0.1" min="0" max="14" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><i class='bx bx-map-pin'></i> Farm Inputs &amp; Location</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="location" class="form-label">Location (For Weather API)</label>
+                                <input type="text" name="location" id="location" class="form-control" value="{{ user.village }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="farm_size" class="form-label">Farm Size (Acres)</label>
+                                <input type="number" name="farm_size" id="farm_size" class="form-control" step="0.1" value="{{ user.farm_size }}" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fertilizer_used" class="form-label">Fertilizer Used This Season (kg)</label>
+                                <input type="number" name="fertilizer_used" id="fertilizer_used" class="form-control" step="0.1" value="120" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pesticide_used" class="form-label">Pesticide Used This Season (kg)</label>
+                                <input type="number" name="pesticide_used" id="pesticide_used" class="form-control" step="0.1" value="3.2" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large btn-block" id="analyseSubmitBtn" style="font-size: 1.2rem;">
+                        <i class='bx bx-analyse'></i> Analyse My Field
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="loader-overlay" id="aiLoader">
+    <div class="spinner"></div>
+    <div class="loader-text">Running AI Digital Twin Models...</div>
+    <div class="loader-subtext" id="loaderSubtext">Executing EfficientNet-B3 (Disease) &amp; YOLOv8 (Pest)</div>
+    <div class="stage-progress">
+        <div class="progress-track">
+            <div class="progress-fill" id="stageProgressFill" style="width: 0%;"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const dropzone = document.getElementById('dropzone');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const previewWrap = document.getElementById('previewWrap');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+
+        function renderPreview(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imagePreview.src = e.target.result;
+                previewWrap.style.display = 'block';
+                uploadPrompt.style.display = 'none';
+                removeImageBtn.style.display = 'inline-flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        imageInput.addEventListener('change', function () {
+            renderPreview(this.files[0]);
+        });
+
+        // Visual feedback for drag-and-drop (the file input itself already
+        // covers the dropzone and receives the actual dropped file natively)
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, () => dropzone.classList.remove('dragover'));
+        });
+        dropzone.addEventListener('drop', (e) => {
+            const file = e.dataTransfer.files[0];
+            if (file) renderPreview(file);
+        });
+
+        removeImageBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            imageInput.value = '';
+            imagePreview.src = '';
+            previewWrap.style.display = 'none';
+            uploadPrompt.style.display = 'block';
+            removeImageBtn.style.display = 'none';
+        });
+
+        const cropAgeInput = document.getElementById('crop_age');
+        const growthStageSelect = document.getElementById('growth_stage');
+
+        cropAgeInput.addEventListener('input', function () {
+            const age = parseInt(this.value);
+            if (!isNaN(age)) {
+                if (age <= 20) growthStageSelect.value = "Seedling";
+                else if (age <= 50) growthStageSelect.value = "Tillering";
+                else if (age <= 70) growthStageSelect.value = "Panicle Initiation";
+                else if (age <= 90) growthStageSelect.value = "Flowering";
+                else growthStageSelect.value = "Maturity";
+            }
+        });
+
+        const btnRegionalAvg = document.getElementById('btnRegionalAvg');
+        btnRegionalAvg.addEventListener('click', () => {
+            document.getElementById('soil_N').value = 82;
+            document.getElementById('soil_P').value = 42;
+            document.getElementById('soil_K').value = 36;
+            document.getElementById('soil_pH').value = 6.6;
+
+            btnRegionalAvg.innerHTML = "<i class='bx bx-check'></i> Averages Applied!";
+            btnRegionalAvg.style.background = "var(--agri-green)";
+            btnRegionalAvg.style.color = "white";
+            setTimeout(() => {
+                btnRegionalAvg.innerHTML = "<i class='bx bx-target-lock'></i> Use Regional Average";
+                btnRegionalAvg.style.background = "transparent";
+                btnRegionalAvg.style.color = "var(--agri-green)";
+            }, 2000);
+        });
+
+        // AJAX Submission Logic
+        const analyseForm = document.getElementById('analyseForm');
+        const aiLoader = document.getElementById('aiLoader');
+        const loaderSubtext = document.getElementById('loaderSubtext');
+        const stageProgressFill = document.getElementById('stageProgressFill');
+        const analyseSubmitBtn = document.getElementById('analyseSubmitBtn');
+
+        analyseForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            aiLoader.classList.add('active');
+            analyseSubmitBtn.disabled = true;
+
+            const loadingStates = [
+                "Fetching OpenWeatherMap Data...",
+                "Running XGBoost (Nutrients & Irrigation)...",
+                "Running LightGBM (Yield Forecast)...",
+                "Evaluating LSTM (7-Day Weather Risk)...",
+                "Generating Grad-CAM & SHAP Explanations...",
+                "Drafting LLaMA 3 Farming Calendar..."
+            ];
+
+            let stateIndex = 0;
+            stageProgressFill.style.width = '5%';
+            const interval = setInterval(() => {
+                if (stateIndex < loadingStates.length) {
+                    loaderSubtext.textContent = loadingStates[stateIndex];
+                    stateIndex++;
+                    stageProgressFill.style.width = `${Math.min(95, (stateIndex / loadingStates.length) * 100)}%`;
+                }
+            }, 1200);
+
+            try {
+                const formData = new FormData(analyseForm);
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                clearInterval(interval);
+                stageProgressFill.style.width = '100%';
+
+                if (response.ok) {
+                    // Store XAI data in session for Chart.js rendering on the dashboard
+                    sessionStorage.setItem('agritwinx_latest_xai', JSON.stringify(data));
+                    window.location.href = '/dashboard';
+                } else {
+                    showToast(data.error || "Analysis failed.", 'error');
+                    aiLoader.classList.remove('active');
+                    analyseSubmitBtn.disabled = false;
+                    stageProgressFill.style.width = '0%';
+                }
+            } catch (error) {
+                clearInterval(interval);
+                showToast("Network error. Could not connect to AI models.", 'error');
+                aiLoader.classList.remove('active');
+                analyseSubmitBtn.disabled = false;
+                stageProgressFill.style.width = '0%';
+            }
+        });
+    });
+
+    // Mobile sidebar toggle (shared pattern across dashboard pages)
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebarOverlay').classList.add('open');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+</script>
+{% endblock %}

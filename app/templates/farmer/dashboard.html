@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <a href="/dashboard" class="sidebar-logo">
+            <i class='bx bx-leaf'></i> AgriTwin<span>X</span>
+        </a>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item active">
+                <i class='bx bx-grid-alt'></i> Dashboard
+            </a>
+            <a href="/analyse" class="nav-item">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+            <a href="/treatment-simulator" class="nav-item">
+                <i class='bx bx-flask'></i> Treatment Simulator
+            </a>
+            <a href="/weather-impact" class="nav-item">
+                <i class='bx bx-cloud-light-rain'></i> Weather Impact
+            </a>
+            <a href="/calendar" class="nav-item">
+                <i class='bx bx-calendar-event'></i> Farming Calendar
+            </a>
+            <a href="/history" class="nav-item">
+                <i class='bx bx-history'></i> History
+            </a>
+            <a href="/settings" class="nav-item">
+                <i class='bx bx-cog'></i> Settings
+            </a>
+            <a href="/logout" class="nav-item" style="margin-top: auto; color: var(--danger);">
+                <i class='bx bx-log-out'></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="welcome-text">
+                    <h1>Welcome, {{ user.name }}</h1>
+                    <p><i class='bx bx-map-pin' style="vertical-align: -1px;"></i> {{ user.village }} — Farm Size: {{ user.farm_size }} acres</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <div class="notification-bell" title="Notifications">
+                    <i class='bx bxs-bell'></i>
+                    {% if prediction and (prediction.pest_risk_score == 'High' or prediction.disease_label != 'Normal') %}
+                        <span class="badge">!</span>
+                    {% endif %}
+                </div>
+                <div class="avatar-circle">
+                    {{ user.name[0] | upper }}
+                </div>
+            </div>
+        </header>
+
+        {% if not prediction %}
+        <div class="empty-state glass-card">
+            <i class='bx bx-data'></i>
+            <h2>No data yet — run your first analysis.</h2>
+            <p>Unlock predictive AI insights by analyzing your field.</p>
+            <a href="/analyse" class="btn btn-primary btn-large">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+        </div>
+        {% else %}
+
+        <div class="dashboard-grid">
+
+            <!-- 1. Disease & Nutrient + XAI (Full Width) -->
+            <div class="glass-card summary-card card-full">
+                <div class="card-header bordered">
+                    <h3 class="card-title">Disease &amp; Nutrient Status</h3>
+                    <div class="card-icon" style="color: var(--danger); background: rgba(244, 67, 54, 0.1);"><i class='bx bx-bug-alt'></i></div>
+                </div>
+                <div class="card-content">
+                    <div class="stat-row">
+                        <div class="stat-block">
+                            <p class="stat-label">Disease Detected</p>
+                            <p class="stat-value danger">{{ prediction.disease_label }}</p>
+                            <p class="stat-caption">Confidence: {{ prediction.confidence }}%</p>
+                        </div>
+                        <div class="stat-block">
+                            <p class="stat-label">Nutrient Status</p>
+                            <p class="stat-value warning">{{ prediction.nutrient_status }}</p>
+                            <p class="stat-caption" style="font-weight: 600; color: var(--info);">Recommendation: {{ "Apply specific NPK based on deficiency" if "Deficiency" in prediction.nutrient_status else "Maintain current levels" }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Explainable AI Section -->
+                    <div class="xai-container">
+                        <div class="xai-image-box">
+                            <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-secondary);">Grad-CAM (Where AI looked)</h4>
+                            <div class="xai-image-row">
+                                <div class="xai-image-wrapper">
+                                    <img src=""
+     onerror="this.src='https://placehold.co/300x300/e9ecef/adb5bd?text=Original+Image'"
+     alt="Original Leaf">
+                                    <h5>Original</h5>
+                                </div>
+                                <div class="xai-image-wrapper">
+                                    <img src="{{ prediction.heatmap_path }}" onerror="this.src='https://placehold.co/300x300/e9ecef/adb5bd?text=Heatmap+Unavailable'" alt="Grad-CAM Heatmap">
+                                    <h5>Grad-CAM Heatmap</h5>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="xai-chart-box">
+                            <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-secondary);">SHAP Values (Why AI decided)</h4>
+                            <!-- Chart.js Canvas for Irrigation/Nutrient SHAP -->
+                            <div style="height:320px;">
+                            <canvas id="nutrientShapChart"></canvas>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Pest Alert Card (Half Width) -->
+            <div class="glass-card summary-card card-half">
+                <div class="card-header">
+                    <h3 class="card-title">Pest Alert</h3>
+                    <div class="card-icon" style="color: var(--warning); background: rgba(255, 152, 0, 0.1);"><i class='bx bx-target-lock'></i></div>
+                </div>
+                <div class="card-content">
+                    <p class="stat-label">Pest Detected on Leaf</p>
+                    <p class="stat-value">{{ prediction.pest_type }}</p>
+                    <p class="stat-caption" style="margin-bottom: 1rem;">Outbreak Risk: <strong style="color: var(--danger);">{{ prediction.pest_risk_score }}</strong></p>
+
+                    <div class="xai-image-wrapper" style="max-height: 250px;">
+                        <!-- Canvas overlay for Pest Bounding Box -->
+                        <canvas id="pestBboxCanvas" style="max-height: 250px; margin: 0 auto;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Yield Forecast & Profit Card (Half Width) -->
+            <div class="glass-card summary-card card-half">
+                <div class="card-header">
+                    <h3 class="card-title">Yield Forecast &amp; Profit</h3>
+                    <div class="card-icon" style="color: var(--agri-green); background: rgba(76, 175, 80, 0.1);"><i class='bx bx-line-chart'></i></div>
+                </div>
+                <div class="card-content">
+                    <div class="stat-row" style="margin-bottom: 1rem;">
+                        <div class="stat-block">
+                            <p class="stat-label">Predicted Yield</p>
+                            <p class="stat-value lg green">{{ prediction.yield_forecast }} t/ha</p>
+                        </div>
+                        <div class="stat-block align-right">
+                            <p class="stat-label">Expected Profit</p>
+                            <p class="stat-value lg">₹{{ prediction.expected_profit }}</p>
+                        </div>
+                    </div>
+
+                    <div class="xai-chart-box" style="margin-top: 1rem; background: transparent; padding: 0;">
+                        <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-secondary);">SHAP Yield Influencers</h4>
+                        <div style="height:260px;">
+                        <canvas id="yieldShapChart"></canvas>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Irrigation Need (Third Width) -->
+            <div class="glass-card summary-card card-third">
+                <div class="card-header">
+                    <h3 class="card-title">Irrigation Need</h3>
+                    <div class="card-icon" style="color: var(--info); background: rgba(33, 150, 243, 0.1);"><i class='bx bx-droplet'></i></div>
+                </div>
+                <div class="card-content">
+                    <div class="metric-center">
+                        <p class="metric-big" style="color: var(--info);">{{ prediction.irrigation_requirement }} mm/day</p>
+                        <p class="metric-caption">Calculated based on current soil moisture and evapotranspiration.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Weather Impact (Third Width) -->
+            <div class="glass-card summary-card card-third">
+                <div class="card-header">
+                    <h3 class="card-title">7-Day Weather Risk</h3>
+                    <div class="card-icon" style="color: var(--text-primary);"><i class='bx bx-cloud-light-rain'></i></div>
+                </div>
+                <div class="card-content">
+                    {% set weather_risk = prediction.weather_impact_json.risk_level if prediction.weather_impact_json else 'Unknown' %}
+                    <div class="metric-center">
+                        <p class="metric-caption">LSTM Pre-symptomatic Alert</p>
+                        <p class="metric-big" style="color: {% if weather_risk == 'High' %}var(--danger){% elif weather_risk == 'Medium' %}var(--warning){% else %}var(--agri-green){% endif %};">
+                            {{ weather_risk }} Risk
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Sustainability Score (Third Width) -->
+            <div class="glass-card summary-card card-third">
+                <div class="card-header">
+                    <h3 class="card-title">Sustainability</h3>
+                    <div class="card-icon"><i class='bx bx-leaf'></i></div>
+                </div>
+                <div class="card-content">
+                    <div class="score-ring">
+                        <span class="score-num" style="color: {% if prediction.sustainability_score > 70 %}var(--agri-green){% else %}var(--warning){% endif %};">
+                            {{ prediction.sustainability_score }}
+                        </span>
+                        <span class="score-max">/ 100</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Farming Calendar Card (Full Width) -->
+            <div class="glass-card summary-card card-full">
+                <div class="card-header bordered">
+                    <h3 class="card-title">LLaMA 3 Farming Calendar</h3>
+                    <div class="card-icon"><i class='bx bx-calendar-check'></i></div>
+                </div>
+                <div class="card-content">
+                    {% if calendar %}
+                        {% for week, action in calendar.schedule_json.items() %}
+                        <div class="calendar-week">
+                            <h4>{{ week }}</h4>
+                            <p>{{ action }}</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>Calendar rendering error.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Mobile sidebar toggle
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebarOverlay').classList.add('open');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+
+    // XAI Chart and Canvas Rendering Logic
+    document.addEventListener('DOMContentLoaded', () => {
+        const xaiDataStr = sessionStorage.getItem('agritwinx_latest_xai');
+
+        if (xaiDataStr) {
+            try {
+                const data = JSON.parse(xaiDataStr);
+
+                // 1. Render SHAP Yield Waterfall (Bar) Chart
+                if (data.xai && data.xai.yield_shap && document.getElementById('yieldShapChart')) {
+                    const ctxYield = document.getElementById('yieldShapChart').getContext('2d');
+                    new Chart(ctxYield, {
+                        type: 'bar',
+                        data: {
+                            labels: data.xai.yield_shap.map(item => item.feature),
+                            datasets: [{
+                                label: 'Impact on Yield (%)',
+                                data: data.xai.yield_shap.map(item => item.direction === 'positive' ? item.impact_percentage : -item.impact_percentage),
+                                backgroundColor: data.xai.yield_shap.map(item => item.direction === 'positive' ? 'rgba(76, 175, 80, 0.7)' : 'rgba(244, 67, 54, 0.7)'),
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y', // Horizontal bar
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            aspectRatio: 1.8,
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
+
+                // 2. Render SHAP Nutrient/Irrigation Bar Chart
+                if (data.xai && data.xai.irrigation_shap && document.getElementById('nutrientShapChart')) {
+                    const ctxNut = document.getElementById('nutrientShapChart').getContext('2d');
+                    new Chart(ctxNut, {
+                        type: 'bar',
+                        data: {
+                            labels: data.xai.irrigation_shap.map(item => item.feature),
+                            datasets: [{
+                                label: 'Impact on Irrigation Need (%)',
+                                data: data.xai.irrigation_shap.map(item => item.impact_percentage),
+                                backgroundColor: 'rgba(33, 150, 243, 0.6)',
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            aspectRatio: 1.8,
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
+
+                // 3. Draw Pest Bounding Box on HTML Canvas
+                if (data.images && data.images.original && document.getElementById('pestBboxCanvas')) {
+                    const canvas = document.getElementById('pestBboxCanvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+
+                    img.onload = () => {
+                        // Maintain aspect ratio, max width 100%
+                        const scale = Math.min(1, 400 / img.width);
+                        canvas.width = img.width * scale;
+                        canvas.height = img.height * scale;
+
+                        ctx.scale(scale, scale);
+                        ctx.drawImage(img, 0, 0);
+
+                        // Draw box if pest is detected
+                        if (data.images.pest_bbox && data.pest && data.pest.pest !== "No Pest Detected") {
+                            const bbox = data.images.pest_bbox; // [x1, y1, x2, y2]
+                            ctx.strokeStyle = '#f44336';
+                            ctx.lineWidth = 4;
+                            ctx.strokeRect(bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]);
+
+                            // Draw label background
+                            ctx.fillStyle = '#f44336';
+                            ctx.fillRect(bbox[0], bbox[1] - 30, 200, 30);
+
+                            // Draw label text
+                            ctx.fillStyle = 'white';
+                            ctx.font = 'bold 18px Inter';
+                            ctx.fillText(`${data.pest.pest} (${data.pest.confidence}%)`, bbox[0] + 5, bbox[1] - 8);
+                        }
+                    };
+                    img.src = data.images.original;
+                }
+
+                // Clear session storage to avoid rendering old data on refresh later
+                // sessionStorage.removeItem('agritwinx_latest_xai');
+
+            } catch (e) {
+                console.error("Error parsing XAI data:", e);
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}AgriTwinX - AI Digital Twin for Paddy Farming{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class='bx bx-leaf'></i> AgriTwin<span>X</span>
+        </div>
+        <div class="nav-links">
+            <a href="/login" class="btn btn-outline">Login</a>
+            <a href="/signup" class="btn btn-primary">Sign Up</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="hero-section">
+        <div class="hero-content">
+            <span class="eyebrow"><i class='bx bx-shield-quarter'></i> Explainable Multi-Agent AI</span>
+            <h1>Your paddy field, mirrored in AI — before problems ever show up.</h1>
+            <p>AgriTwinX builds a living digital twin of your farm. Upload a leaf photo and five parallel AI agents check disease, pests, irrigation need and yield outlook — every call backed by Explainable AI (XAI) so you see exactly why, not just what.</p>
+
+            <div class="hero-actions">
+                <a href="/signup" class="btn btn-primary btn-large">Get Started as Farmer <i class='bx bx-right-arrow-alt'></i></a>
+                <a href="#how-it-works" class="btn btn-outline btn-large">See How It Works</a>
+            </div>
+
+            <div class="hero-stats">
+                <div>
+                    <span class="stat-num">5</span>
+                    <span class="stat-label">AI agents per scan</span>
+                </div>
+                <div>
+                    <span class="stat-num">XAI</span>
+                    <span class="stat-label">Every result explained</span>
+                </div>
+                <div>
+                    <span class="stat-num">24/7</span>
+                    <span class="stat-label">Weather &amp; risk watch</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium UI Visual representation -->
+        <div class="hero-visual">
+            <div class="glass-card" style="width: 80%; text-align: center;">
+                <i class='bx bx-scan' style="font-size: 4rem; color: var(--agri-green);"></i>
+                <h3 style="margin: 1rem 0;">Precision Analysis</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Upload a leaf, and let 5 parallel AI models analyze your farm's health instantly.</p>
+            </div>
+
+            <!-- Floating Feature Badges -->
+            <div class="floating-badge badge-1">
+                <div class="badge-icon"><i class='bx bx-bug'></i></div>
+                <div class="badge-text">Pest Alerts</div>
+            </div>
+
+            <div class="floating-badge badge-2">
+                <div class="badge-icon" style="background: var(--info);"><i class='bx bx-droplet'></i></div>
+                <div class="badge-text">Irrigation Need</div>
+            </div>
+
+            <div class="floating-badge badge-3">
+                <div class="badge-icon" style="background: var(--warning);"><i class='bx bx-line-chart'></i></div>
+                <div class="badge-text">Yield Forecast</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Feature Highlights -->
+    <section id="how-it-works">
+        <div class="section-heading">
+            <span class="eyebrow">What you get</span>
+            <h2>One scan, a full field diagnosis</h2>
+            <p>Every upload runs through disease detection, pest recognition, irrigation scoring and yield modeling — then explains itself in plain language.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card glass-card">
+                <div class="card-icon"><i class='bx bx-scan'></i></div>
+                <h3>Disease Detection</h3>
+                <p>Trained on the Paddy Doctor dataset to flag leaf disease early, with confidence scores you can trust.</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="card-icon" style="background: rgba(231,76,60,0.1); color: var(--danger);"><i class='bx bx-bug'></i></div>
+                <h3>Pest Alerts</h3>
+                <p>Catch infestations before they spread, with treatment options ranked by cost, recovery time and safety.</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="card-icon" style="background: rgba(52,152,219,0.1); color: var(--info);"><i class='bx bx-droplet'></i></div>
+                <h3>Irrigation Guidance</h3>
+                <p>Weather-aware watering recommendations that adapt to your field's real conditions, day by day.</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="card-icon" style="background: rgba(241,196,15,0.15); color: #d35400;"><i class='bx bx-line-chart'></i></div>
+                <h3>Yield Forecast</h3>
+                <p>Know what to expect at harvest, with a farming calendar that plans the weeks in between.</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="card-icon"><i class='bx bx-brain'></i></div>
+                <h3>Explainable AI</h3>
+                <p>Every prediction comes with a visual breakdown of what the model saw and why it decided that way.</p>
+            </div>
+            <div class="feature-card glass-card">
+                <div class="card-icon" style="background: rgba(52,152,219,0.1); color: var(--info);"><i class='bx bx-cloud-lightning'></i></div>
+                <h3>Weather Impact</h3>
+                <p>A 7-day risk outlook so you can act on disease and pest pressure before it reaches your field.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        &copy; 2026 AgriTwinX. Built for precision paddy farming.
+    </footer>
+</div>
+{% endblock %}

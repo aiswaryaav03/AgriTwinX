@@ -1,0 +1,32 @@
+.env
+.env.*
+!.env.example
+
+.venv/
+venv/
+__pycache__/
+.vscode/
+
+*.crdownload
+
+instance/*.db
+instance/*.sqlite
+instance/*.sqlite3
+
+.ipynb_checkpoints/
+.pytest_cache/
+*.log
+
+app/static/uploads/*
+app/static/heatmaps/*
+/logs
+
+feature-2_backup.ipynb
+
+!instance/.gitkeep
+# Private academic documents
+AgriTwinX_Final_Project_Review.pptx
+AgriTwinX_SBA_Report_Antigravity.docx
+
+# Duplicate requirements file
+requirements_updated.txt

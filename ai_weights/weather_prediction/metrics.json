@@ -1,0 +1,13 @@
+{
+    "Accuracy": 0.9525623268698061,
+    "Precision": 0.9531938376307059,
+    "Recall": 0.9525623268698061,
+    "F1_Score": 0.9519644829209108,
+    "ROC_AUC": 0.9958261545885924,
+    "Best_Hyperparameters": {
+        "hidden_size": 64,
+        "num_layers": 2,
+        "dropout": 0.2
+    },
+    "Sequence_Length": 168
+}

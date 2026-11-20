@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="container auth-container">
+    <div class="glass-card auth-card wide">
+        <div class="auth-header">
+            <div class="auth-icon"><i class='bx bx-leaf'></i></div>
+            <h2>Create Farmer Account</h2>
+            <p>Join AgriTwinX for AI-powered precision farming insights</p>
+        </div>
+
+        <form action="/signup" method="POST" id="signupForm" novalidate>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name" class="form-label"><i class='bx bx-user'></i> Full Name</label>
+                    <input type="text" id="name" name="name" class="form-control" required placeholder="Ramesh Kumar" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="phone" class="form-label"><i class='bx bx-phone'></i> Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" required pattern="[0-9]{10}" placeholder="9876543210" autocomplete="tel">
+                    <span class="field-hint" id="phoneHint">10 digits, no spaces or country code</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label"><i class='bx bx-envelope'></i> Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" required placeholder="ramesh.kumar@gmail.com" autocomplete="email">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="village" class="form-label"><i class='bx bx-map-pin'></i> Village / Location</label>
+                    <input type="text" id="village" name="village" class="form-control" required placeholder="Thanjavur, Tamil Nadu">
+                </div>
+                <div class="form-group">
+                    <label for="farm_size" class="form-label"><i class='bx bx-landscape'></i> Farm Size (in acres)</label>
+                    <input type="number" id="farm_size" name="farm_size" class="form-control" required step="0.1" min="0.1" placeholder="4.5">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password" class="form-label"><i class='bx bx-lock-alt'></i> Password</label>
+                    <div class="input-with-icon">
+                        <input type="password" id="password" name="password" class="form-control" required minlength="6" placeholder="••••••••" autocomplete="new-password">
+                        <button type="button" class="input-icon-btn" onclick="togglePassword('password', this)" aria-label="Show password">
+                            <i class='bx bx-show'></i>
+                        </button>
+                    </div>
+                    <div class="strength-track" id="strengthTrack">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <span class="field-hint" id="strengthLabel">At least 6 characters</span>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password" class="form-label"><i class='bx bx-lock-alt'></i> Confirm Password</label>
+                    <div class="input-with-icon">
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required minlength="6" placeholder="••••••••" autocomplete="new-password">
+                        <button type="button" class="input-icon-btn" onclick="togglePassword('confirm_password', this)" aria-label="Show password">
+                            <i class='bx bx-show'></i>
+                        </button>
+                    </div>
+                    <span class="field-hint" id="matchHint"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-large" id="signupSubmitBtn">
+                <i class='bx bx-user-plus'></i> Create Account
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="/login">Login here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function togglePassword(fieldId, btn) {
+        const field = document.getElementById(fieldId);
+        const icon = btn.querySelector('i');
+        const isHidden = field.type === 'password';
+        field.type = isHidden ? 'text' : 'password';
+        icon.classList.toggle('bx-show', !isHidden);
+        icon.classList.toggle('bx-hide', isHidden);
+    }
+
+    // Live phone digit hint
+    const phoneInput = document.getElementById('phone');
+    const phoneHint = document.getElementById('phoneHint');
+    phoneInput.addEventListener('input', () => {
+        const valid = /^[0-9]{10}$/.test(phoneInput.value);
+        phoneHint.textContent = valid ? 'Looks good' : '10 digits, no spaces or country code';
+        phoneHint.style.color = valid ? 'var(--agri-green-dark)' : 'var(--text-secondary)';
+    });
+
+    // Live password strength meter (visual only, does not block submission)
+    const passwordInput = document.getElementById('password');
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthLabel = document.getElementById('strengthLabel');
+    passwordInput.addEventListener('input', () => {
+        const val = passwordInput.value;
+        let score = 0;
+        if (val.length >= 6) score++;
+        if (val.length >= 10) score++;
+        if (/[0-9]/.test(val) && /[a-zA-Z]/.test(val)) score++;
+        if (/[^a-zA-Z0-9]/.test(val)) score++;
+
+        const levels = [
+            { width: '0%', color: 'var(--danger)', label: 'At least 6 characters' },
+            { width: '30%', color: 'var(--danger)', label: 'Weak' },
+            { width: '60%', color: 'var(--warning)', label: 'Okay' },
+            { width: '85%', color: 'var(--agri-green)', label: 'Good' },
+            { width: '100%', color: 'var(--agri-green-dark)', label: 'Strong' },
+        ];
+        const level = levels[Math.min(score, 4)];
+        strengthFill.style.width = level.width;
+        strengthFill.style.background = level.color;
+        strengthLabel.textContent = val.length ? level.label : 'At least 6 characters';
+    });
+
+    // Live match indicator
+    const confirmInput = document.getElementById('confirm_password');
+    const matchHint = document.getElementById('matchHint');
+    function checkMatch() {
+        if (!confirmInput.value) { matchHint.textContent = ''; return; }
+        const match = passwordInput.value === confirmInput.value;
+        matchHint.textContent = match ? 'Passwords match' : 'Passwords do not match';
+        matchHint.style.color = match ? 'var(--agri-green-dark)' : 'var(--danger)';
+    }
+    confirmInput.addEventListener('input', checkMatch);
+    passwordInput.addEventListener('input', checkMatch);
+
+    // Final submit guard — reuses the global showToast() helper from base.html
+    document.getElementById('signupForm').addEventListener('submit', function (e) {
+        const pwd = passwordInput.value;
+        const confirm = confirmInput.value;
+
+        if (pwd !== confirm) {
+            e.preventDefault();
+            showToast('Passwords do not match.', 'error');
+            return;
+        }
+        if (!/^[0-9]{10}$/.test(phoneInput.value)) {
+            e.preventDefault();
+            showToast('Please enter a valid 10-digit phone number.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('signupSubmitBtn');
+        btn.disabled = true;
+        btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i> Creating account...";
+    });
+</script>
+{% endblock %}

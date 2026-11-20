@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Treatment Simulator - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <a href="/dashboard" class="sidebar-logo">
+            <i class='bx bx-leaf'></i> AgriTwin<span>X</span>
+        </a>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item">
+                <i class='bx bx-grid-alt'></i> Dashboard
+            </a>
+            <a href="/analyse" class="nav-item">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+            <a href="/treatment-simulator" class="nav-item active">
+                <i class='bx bx-flask'></i> Treatment Simulator
+            </a>
+            <a href="/weather-impact" class="nav-item">
+                <i class='bx bx-cloud-light-rain'></i> Weather Impact
+            </a>
+            <a href="/calendar" class="nav-item">
+                <i class='bx bx-calendar-event'></i> Farming Calendar
+            </a>
+            <a href="/history" class="nav-item">
+                <i class='bx bx-history'></i> History
+            </a>
+            <a href="/settings" class="nav-item">
+                <i class='bx bx-cog'></i> Settings
+            </a>
+            <a href="/logout" class="nav-item" style="margin-top: auto; color: var(--danger);">
+                <i class='bx bx-log-out'></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="welcome-text">
+                    <h1>LLaMA 3 Treatment Simulator</h1>
+                    <p>Simulate financial and agronomic outcomes before applying chemicals.</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <div class="avatar-circle">
+                    {{ user.name[0] | upper }}
+                </div>
+            </div>
+        </header>
+
+        {% if not prediction or prediction.disease_label == 'Normal' %}
+        <div class="empty-state glass-card">
+            <i class='bx bx-check-shield' style="color: var(--agri-green); opacity: 1;"></i>
+            <h2>Your field is healthy!</h2>
+            <p>No diseases detected in your latest analysis. Simulation is not required right now.</p>
+            <a href="/analyse" class="btn btn-primary">Run New Analysis</a>
+        </div>
+        {% else %}
+
+        <div class="glass-card" style="padding: 2rem;">
+            <div class="issue-banner">
+                <div class="card-icon"><i class='bx bx-bug'></i></div>
+                <div>
+                    <h3>Detected Issue: {{ prediction.disease_label }}</h3>
+                    <p><strong>Confidence:</strong> {{ prediction.confidence }}%
+                        <span class="divider">|</span>
+                        <strong>Farm Size:</strong> {{ user.farm_size }} acres
+                        <span class="divider">|</span>
+                        <strong>Weather Risk:</strong> {{ prediction.weather_impact_json.risk_level if prediction.weather_impact_json else 'Medium' }}</p>
+                </div>
+            </div>
+
+            <form id="simulatorForm">
+                <h3>Select Treatments to Compare</h3>
+                <p class="sim-intro">Choose up to 3 options to see a detailed LLaMA 3 comparative analysis on cost, yield recovery, and safety.</p>
+
+                <div class="checkbox-grid">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" name="options" value="Spray Tricyclazole">
+                        <span><i class='bx bx-flask' style="margin-right: 0.4rem; color: var(--info);"></i> Spray Tricyclazole</span>
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" name="options" value="Apply Neem Oil">
+                        <span><i class='bx bx-leaf' style="margin-right: 0.4rem; color: var(--agri-green-dark);"></i> Apply Neem Oil (Organic)</span>
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" name="options" value="Copper Oxychloride">
+                        <span><i class='bx bx-flask' style="margin-right: 0.4rem; color: var(--info);"></i> Copper Oxychloride</span>
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" name="options" value="No Treatment">
+                        <span><i class='bx bx-block' style="margin-right: 0.4rem; color: var(--danger);"></i> No Treatment</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btnSimulate" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <i class='bx bx-brain'></i> Compare Treatments
+                </button>
+            </form>
+
+            <div id="simulationLoader" style="display: none; text-align: center; padding: 3rem 0;">
+                <div class="mini-spinner"></div>
+                <p style="font-weight: 600; color: var(--agri-green);">Groq LLaMA 3 is analyzing agronomic outcomes...</p>
+            </div>
+
+            <div id="simulationResults" class="simulation-results" style="display: none;">
+                <!-- Results injected here by JS -->
+            </div>
+        </div>
+
+        <!-- Past Logs -->
+        <h3 style="margin: 2rem 0 1rem 0;">Past Simulations</h3>
+        {% if logs %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for log in logs %}
+            <div class="glass-card" style="padding: 1rem; display: flex; align-items: center; gap: 1rem;">
+                <div class="card-icon" style="color: var(--info); background: rgba(52,152,219,0.1); flex-shrink: 0;"><i class='bx bx-time-five'></i></div>
+                <div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);">{{ log.action_date.strftime('%b %d, %Y') }} - {{ log.disease }}</p>
+                    <p style="font-weight: 600;">Compared: {{ log.treatment_chosen }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state glass-card" style="padding: 2.5rem;">
+            <i class='bx bx-history'></i>
+            <h3>No simulations yet</h3>
+            <p>Run a comparison above and it will show up here for quick reference later.</p>
+        </div>
+        {% endif %}
+
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Mobile sidebar toggle (shared pattern across dashboard pages)
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebarOverlay').classList.add('open');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('simulatorForm');
+        if (!form) return;
+
+        // Cap selection at 3, matching the "choose up to 3" instruction
+        const allCheckboxes = document.querySelectorAll('input[name="options"]');
+        allCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                const checkedCount = document.querySelectorAll('input[name="options"]:checked').length;
+                allCheckboxes.forEach(other => {
+                    if (!other.checked) {
+                        other.disabled = checkedCount >= 3;
+                        other.closest('.custom-checkbox').style.opacity = checkedCount >= 3 ? '0.5' : '1';
+                    }
+                });
+            });
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const checkboxes = document.querySelectorAll('input[name="options"]:checked');
+            if (checkboxes.length === 0) {
+                showToast('Please select at least one treatment option.', 'warning');
+                return;
+            }
+
+            const options = Array.from(checkboxes).map(cb => cb.value);
+
+            const loader = document.getElementById('simulationLoader');
+            const resultsDiv = document.getElementById('simulationResults');
+            const btn = document.getElementById('btnSimulate');
+
+            btn.style.display = 'none';
+            resultsDiv.style.display = 'none';
+            loader.style.display = 'block';
+
+            // Build Context Payload
+            const payload = {
+                disease: "{{ prediction.disease_label if prediction else 'Unknown' }}",
+                severity: "Moderate",
+                crop_age: 45, // Normally fetched from input_data relationship
+                growth_stage: "Tillering",
+                weather_summary: "Temp 34C, Humidity 82%",
+                options: options
+            };
+
+            try {
+                const response = await fetch('/api/treatment/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                loader.style.display = 'none';
+                btn.style.display = 'flex';
+
+                if (response.ok && data.comparison) {
+                    resultsDiv.innerHTML = '';
+
+                    // Iterate over Groq JSON response keys
+                    for (const [option, analysis] of Object.entries(data.comparison)) {
+
+                        let cardClass = "sim-card";
+                        let badge = "";
+
+                        if (option.toLowerCase().includes("no treatment")) {
+                            cardClass += " warning";
+                            badge = '<span class="sim-badge">Not Recommended</span>';
+                        }
+
+                        if (
+                            (analysis["Yield Recovery"] || "").toLowerCase().includes("90") ||
+                            (analysis["Yield Recovery"] || "").toLowerCase().includes("good")
+                        ) {
+                            cardClass += " optimal";
+                            badge = '<span class="sim-badge">Recommended</span>';
+                        }
+
+                        const card = document.createElement("div");
+                        card.className = cardClass;
+
+                        card.innerHTML = `
+                            ${badge}
+                            <h4>${option}</h4>
+                            <div class="sim-row"><i class='bx bx-rupee'></i><strong>Cost</strong> ${analysis["Cost"]}</div>
+                            <div class="sim-row"><i class='bx bx-trending-up'></i><strong>Yield Recovery</strong> ${analysis["Yield Recovery"]}</div>
+                            <div class="sim-row"><i class='bx bx-shield-quarter'></i><strong>Env. Safety</strong> ${analysis["Environmental Safety"]}</div>
+                            <div class="sim-row"><i class='bx bx-timer'></i><strong>Recovery Speed</strong> ${analysis["Speed of Recovery"]}</div>
+                        `;
+
+                        resultsDiv.appendChild(card);
+                    }
+
+                    resultsDiv.style.display = 'grid';
+                } else {
+                    showToast('Simulation failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                loader.style.display = 'none';
+                btn.style.display = 'flex';
+                console.error(error);
+                showToast('Network error while comparing treatments.', 'error');
+            }
+        });
+    });
+</script>
+{% endblock %}

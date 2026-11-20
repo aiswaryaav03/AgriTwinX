@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}History & Feedback - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <a href="/dashboard" class="sidebar-logo">
+            <i class='bx bx-leaf'></i> AgriTwin<span>X</span>
+        </a>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item">
+                <i class='bx bx-grid-alt'></i> Dashboard
+            </a>
+            <a href="/analyse" class="nav-item">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+            <a href="/treatment-simulator" class="nav-item">
+                <i class='bx bx-flask'></i> Treatment Simulator
+            </a>
+            <a href="/weather-impact" class="nav-item">
+                <i class='bx bx-cloud-light-rain'></i> Weather Impact
+            </a>
+            <a href="/calendar" class="nav-item">
+                <i class='bx bx-calendar-event'></i> Farming Calendar
+            </a>
+            <a href="/history" class="nav-item active">
+                <i class='bx bx-history'></i> History
+            </a>
+            <a href="/settings" class="nav-item">
+                <i class='bx bx-cog'></i> Settings
+            </a>
+            <a href="/logout" class="nav-item" style="margin-top: auto; color: var(--danger);">
+                <i class='bx bx-log-out'></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="welcome-text">
+                    <h1>Farm History &amp; Feedback</h1>
+                    <p>Track your past AI analyses and submit harvest feedback to improve models.</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <div class="avatar-circle">
+                    {{ user.name[0] | upper }}
+                </div>
+            </div>
+        </header>
+
+        <!-- Post Harvest Feedback Form -->
+        <div class="glass-card feedback-card" style="padding: 2rem; margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><i class='bx bx-message-square-edit' style="color: var(--agri-green);"></i> Post-Harvest Ground Truth Feedback</h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Help AgriTwinX learn. Did the AI predictions match your actual harvest? Your data trains our future models.</p>
+
+            <!-- In a full implementation, this would submit to a specific endpoint. Keeping it static/mock for UI demonstration -->
+            <form action="#" method="POST" id="feedbackForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Actual Yield Achieved (tons/ha)</label>
+                        <input type="number" class="form-control" step="0.1" placeholder="e.g. 4.5">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Was Disease Prediction Accurate?</label>
+                        <select class="form-control">
+                            <option>Yes - Disease Confirmed</option>
+                            <option>No - Different Disease</option>
+                            <option>No - Crop was healthy</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Primary Treatment Used</label>
+                        <input type="text" class="form-control" placeholder="e.g. Tricyclazole">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <button type="button" class="btn btn-outline" style="width: 100%; height: 42px;" id="submitFeedbackBtn">
+                            <i class='bx bx-send'></i> Submit Feedback
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if not history %}
+        <div class="empty-state glass-card">
+            <i class='bx bx-time-five'></i>
+            <h3>No historical records yet</h3>
+            <p>Run an analysis to start building your timeline.</p>
+            <a href="/analyse" class="btn btn-primary">Analyse My Field</a>
+        </div>
+        {% else %}
+
+        <div class="page-toolbar">
+            <div class="search-input-wrap">
+                <i class='bx bx-search'></i>
+                <input type="text" class="form-control" id="historySearch" placeholder="Search by disease or pest...">
+            </div>
+            <select class="form-control filter-select" id="statusFilter">
+                <option value="all">All Records</option>
+                <option value="diseased">Disease Detected</option>
+                <option value="healthy">Healthy</option>
+            </select>
+        </div>
+
+        <div class="timeline" id="historyTimeline">
+            {% for record in history %}
+            <div class="timeline-item glass-card"
+                 data-disease="{{ record.disease_label | lower }} {{ record.pest_type | lower }}"
+                 data-status="{{ 'healthy' if record.disease_label == 'Normal' else 'diseased' }}">
+
+                <div class="timeline-item-head" onclick="this.closest('.timeline-item').classList.toggle('expanded')">
+                    <div style="flex: 1;">
+                        <div class="timeline-date">{{ record.created_at.strftime('%B %d, %Y - %H:%M') }}</div>
+                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                            <div class="record-meta">
+                                <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem;">
+                                    <span class="badge-status {{ 'success' if record.disease_label == 'Normal' else 'danger' }}">
+                                        {{ 'Healthy' if record.disease_label == 'Normal' else 'Disease Detected' }}
+                                    </span>
+                                    {{ record.disease_label }} ({{ record.confidence }}%)
+                                </h4>
+                                <p>Pest Detected: {{ record.pest_type }}</p>
+                                <p>Nutrient Status: {{ record.nutrient_status }}</p>
+                                <p>Predicted Yield: <strong>{{ record.yield_forecast }} t/ha</strong></p>
+                            </div>
+
+                            {% if record.heatmap_path %}
+                            <div class="record-thumb">
+                                <img src="{{ record.heatmap_path }}" alt="Historical Heatmap" onerror="this.src='https://placehold.co/100x100/e9ecef/adb5bd?text=No+Img'">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <i class='bx bx-chevron-down expand-chevron'></i>
+                </div>
+
+                <div class="record-actions">
+                    <a href="/treatment-simulator" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                        <i class='bx bx-flask'></i> Compare Treatments
+                    </a>
+                    <a href="/analyse" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                        <i class='bx bx-refresh'></i> Re-Analyse Field
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="empty-state glass-card" id="noResultsState" style="display: none;">
+            <i class='bx bx-search-alt'></i>
+            <h3>No matching records</h3>
+            <p>Try a different search term or filter.</p>
+        </div>
+
+        {% endif %}
+
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Mobile sidebar toggle (shared pattern across dashboard pages)
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebarOverlay').classList.add('open');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+
+    // Mock feedback submit — kept static/UI-only as in the original file
+    const feedbackBtn = document.getElementById('submitFeedbackBtn');
+    if (feedbackBtn) {
+        feedbackBtn.addEventListener('click', () => {
+            showToast('Feedback submitted. Model retraining pipeline queued (Mock).', 'success');
+        });
+    }
+
+    // Client-side search + status filter over the already-rendered timeline
+    const searchInput = document.getElementById('historySearch');
+    const statusFilter = document.getElementById('statusFilter');
+    const timelineItems = document.querySelectorAll('#historyTimeline .timeline-item');
+    const noResultsState = document.getElementById('noResultsState');
+
+    function applyFilters() {
+        const query = (searchInput?.value || '').toLowerCase().trim();
+        const status = statusFilter?.value || 'all';
+        let visibleCount = 0;
+
+        timelineItems.forEach(item => {
+            const matchesQuery = !query || item.dataset.disease.includes(query);
+            const matchesStatus = status === 'all' || item.dataset.status === status;
+            const show = matchesQuery && matchesStatus;
+            item.classList.toggle('hidden-by-filter', !show);
+            if (show) visibleCount++;
+        });
+
+        if (noResultsState) {
+            noResultsState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+</script>
+{% endblock %}

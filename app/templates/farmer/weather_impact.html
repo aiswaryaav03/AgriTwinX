@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Weather Impact - AgriTwinX{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <a href="/dashboard" class="sidebar-logo">
+            <i class='bx bx-leaf'></i> AgriTwin<span>X</span>
+        </a>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="nav-item">
+                <i class='bx bx-grid-alt'></i> Dashboard
+            </a>
+            <a href="/analyse" class="nav-item">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+            <a href="/treatment-simulator" class="nav-item">
+                <i class='bx bx-flask'></i> Treatment Simulator
+            </a>
+            <a href="/weather-impact" class="nav-item active">
+                <i class='bx bx-cloud-light-rain'></i> Weather Impact
+            </a>
+            <a href="/calendar" class="nav-item">
+                <i class='bx bx-calendar-event'></i> Farming Calendar
+            </a>
+            <a href="/history" class="nav-item">
+                <i class='bx bx-history'></i> History
+            </a>
+            <a href="/settings" class="nav-item">
+                <i class='bx bx-cog'></i> Settings
+            </a>
+            <a href="/logout" class="nav-item" style="margin-top: auto; color: var(--danger);">
+                <i class='bx bx-log-out'></i> Logout
+            </a>
+        </nav>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="topbar">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="sidebar-toggle" onclick="openSidebar()" aria-label="Open menu">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="welcome-text">
+                    <h1>Weather Impact</h1>
+                    <p><i class='bx bx-map-pin' style="vertical-align: -1px;"></i> {{ user.village }} — Farm Size: {{ user.farm_size }} acres</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <div class="notification-bell" title="Notifications">
+                    <i class='bx bxs-bell'></i>
+                    {% if prediction and (prediction.pest_risk_score == 'High' or prediction.disease_label != 'Normal') %}
+                        <span class="badge">!</span>
+                    {% endif %}
+                </div>
+                <div class="avatar-circle">
+                    {{ user.name[0] | upper }}
+                </div>
+            </div>
+        </header>
+
+        {% if not prediction or not prediction.weather_impact_json %}
+        <div class="empty-state glass-card">
+            <i class='bx bx-cloud-light-rain'></i>
+            <h3>No weather risk data yet</h3>
+            <p>Run your first field analysis to generate the 7-day pre-symptomatic weather risk forecast for your farm.</p>
+            <a href="/analyse" class="btn btn-primary btn-large">
+                <i class='bx bx-scan'></i> Analyse My Field
+            </a>
+        </div>
+        {% else %}
+
+        {% set weather_risk = prediction.weather_impact_json.risk_level if prediction.weather_impact_json.risk_level else None %}
+
+        <div class="dashboard-grid">
+
+            {% if weather_risk %}
+            <div class="glass-card summary-card card-full">
+                <div class="card-header bordered">
+                    <h3 class="card-title">Overall 7-Day Risk Outlook</h3>
+                    <div class="card-icon" style="color: {% if weather_risk == 'High' %}var(--danger){% elif weather_risk == 'Medium' %}var(--warning){% else %}var(--agri-green){% endif %}; background: {% if weather_risk == 'High' %}rgba(231,76,60,0.1){% elif weather_risk == 'Medium' %}rgba(241,196,15,0.15){% else %}rgba(46,204,113,0.1){% endif %};">
+                        <i class='bx bx-cloud-light-rain'></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="metric-center">
+                        <p class="metric-caption">LSTM Pre-symptomatic Alert</p>
+                        <p class="metric-big" style="color: {% if weather_risk == 'High' %}var(--danger){% elif weather_risk == 'Medium' %}var(--warning){% else %}var(--agri-green){% endif %};">
+                            {{ weather_risk }} Risk
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Day-by-day breakdown — rendered generically from whatever keys are present -->
+            <div class="glass-card summary-card card-full">
+
+    <div class="card-header bordered">
+        <h3 class="card-title">7-Day Weather Forecast</h3>
+        <div class="card-icon">
+            <i class='bx bx-calendar-week'></i>
+        </div>
+    </div>
+
+    <div class="card-content">
+
+        {% if prediction.weather_impact_json.forecast %}
+
+            <div style="
+                display:grid;
+                grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+                gap:1rem;
+            ">
+
+            {% for day in prediction.weather_impact_json.forecast %}
+
+                <div class="glass-card" style="padding:1rem;">
+
+                    <h4 style="margin-bottom:10px;">
+                        Day {{ day.day }}
+                    </h4>
+
+                    <p><strong> Temperature:</strong> {{ day.temperature }} °C</p>
+
+                    <p><strong> Humidity:</strong> {{ day.humidity }} %</p>
+
+                    <p><strong> Wind:</strong> {{ day.wind_speed }} km/h</p>
+
+                    <p><strong> Rain:</strong> {{ day.rainfall_hours }} hrs</p>
+
+                    <p>
+                        <strong> Risk:</strong>
+
+                        <span style="
+                        color:
+                        {% if day.risk=='High' %}
+                            #e74c3c
+                        {% elif day.risk=='Medium' %}
+                            #f39c12
+                        {% else %}
+                            #2ecc71
+                        {% endif %}
+                        ">
+                            {{ day.risk }}
+                        </span>
+
+                    </p>
+
+                    <hr>
+
+                    <small>{{ day.action }}</small>
+
+                </div>
+
+            {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p>No forecast available.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebarOverlay').classList.add('open');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+</script>
+{% endblock %}
